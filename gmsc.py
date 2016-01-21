@@ -24,7 +24,7 @@ def main():
 	test.drop('SeriousDlqin2yrs', axis = 1, inplace = True)
 	test.drop('Unnamed: 0', axis = 1, inplace = True)	
 
-	print "dataset made using numpy function genfromtxt"	
+	print "dataset made using pandas dataframe"	
 
 	print 'training set size = ',len(train)	
 
