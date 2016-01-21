@@ -28,18 +28,19 @@ def main():
 
 	print 'training set size = ',len(train)	
 
-	rf = RandomForestClassifier(n_estimators=350, oob_score=True, n_jobs = -1, random_state = 42)	
+	rf = RandomForestClassifier(n_estimators = 256, oob_score = True, n_jobs = -1, random_state = 42)	
 
 	rf.fit(train, target)
 
 	print 'Model Fitted\n Writing to File...'
 
 	predictions = [[index + 1, x[1]] for index, x in enumerate(rf.predict_proba(test))]
-	predicted_probs = pd.DataFrame(predictions, columns = ['Unnamed: 0', 'SeriousDlqin2yrs'])
-	predicted_probs.head(5)	
+	predicted_probs = pd.DataFrame(predictions, columns = ['Id', 'Probability'])
 
-	savetxt('submission.csv', predicted_probs, delimiter=',', fmt='%d,%f', header='Id,Probability', comments = '')	
+	predicted_probs.to_csv('submission.csv',  index = False)
 	
 	print ('Predictions Made, Expected Score = ' +  str(rf.oob_score_))
 
 if __name__ == '__main__' : main()
+
+
