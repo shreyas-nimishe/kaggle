@@ -1,33 +1,45 @@
+# -*- coding: utf-8 -*-
+
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.preprocessing import Imputer
+from sklearn.naive_bayes import MultinomialNB, GaussianNB
 from numpy import genfromtxt, savetxt
+import pandas as pd
+from numpy import genfromtxt, savetxt	
 
 def main():
-    #create the training & test sets, skipping the header row with [1:]
-    #f8 means float
-    dataset = genfromtxt(open('./cs-training.csv','r'), delimiter=',', dtype='f8')[1:] 
-    #target = [x[0] for x in dataset]
-    #train = [x[1:] for x in dataset]
-    target = dataset[:,1]
-    train = dataset[:,2:]		
-    test = genfromtxt(open('./cs-test.csv','r'), delimiter=',', dtype='f8')[1:,2:]
-    print "dataset made using numpy function genfromtxt"
+	'''
+	Move the data set (training set and test data) in the same directory as the prediction script.
+	
+	'''
+	dataset = pd.read_csv('cs-training.csv')	
 
-    #imp=Imputer(missing_values='NaN',strategy='mean',axis=0)
-    #new_train = imp.fit_transform(train)
-    #create and train the random forest
-    #multi-core CPUs can use: rf = RandomForestClassifier(n_estimators=100, n_jobs=2)
-    print len(train)
-    rf = RandomForestClassifier(n_estimators=15,n_jobs=4)
-    rf.fit(train, target)
-    print "data fitted using meathod fit in RandomForestClassifier"
-    
-   
-    predicted_probs = [[index + 1, x[1]] for index, x in enumerate(rf.predict_proba(test))]
-    print "probability calculated"
+	target = dataset['SeriousDlqin2yrs']
+	train = dataset[dataset.columns.values[2:]]
+	target.fillna(target.mean(), inplace = True)
+	train.fillna(train.mean(), inplace = True)	
 
-    savetxt('./submission.csv', predicted_probs, delimiter=',', fmt='%d,%f', 
-            header='Id,Probability', comments = '')
-   
-if __name__ == "__main__":
-    main()
+	test = pd.read_csv('cs-test.csv')
+	test.fillna(test.mean(), inplace = True)
+	test.drop('SeriousDlqin2yrs', axis = 1, inplace = True)
+	test.drop('Unnamed: 0', axis = 1, inplace = True)	
+
+	print "dataset made using numpy function genfromtxt"	
+
+	print 'training set size = ',len(train)	
+
+	rf = RandomForestClassifier(n_estimators=350, oob_score=True, n_jobs = -1, random_state = 42)	
+
+	rf.fit(train, target)
+
+	print 'Model Fitted\n Writing to File...'
+
+	predictions = [[index + 1, x[1]] for index, x in enumerate(rf.predict_proba(test))]
+	predicted_probs = pd.DataFrame(predictions, columns = ['Unnamed: 0', 'SeriousDlqin2yrs'])
+	predicted_probs.head(5)	
+
+	savetxt('submission.csv', predicted_probs, delimiter=',', fmt='%d,%f', header='Id,Probability', comments = '')	
+	
+	print ('Predictions Made, Expected Score = ' +  str(rf.oob_score_))
+
+if __name__ == '__main__' : main()
